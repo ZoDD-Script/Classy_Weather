@@ -1,6 +1,4 @@
 import React from "react";
-import { polyfillCountryFlagEmojis } from "country-flag-emoji-polyfill";
-polyfillCountryFlagEmojis();
 
 function getWeatherIcon(wmoCode) {
   const icons = new Map([
@@ -35,16 +33,18 @@ function formatDay(dateStr) {
 }
 
 class App extends React.Component {
-  state = { 
-    location: "", 
-    isLoading: false,
-    displayLocation: "",
-    weather: {}
+  constructor(props) {
+    super(props);
+    this.state = { 
+      location: "lisbon", 
+      isLoading: false,
+      displayLocation: "",
+      weather: {}
+    }
+    this.fetchWeather = this.fetchWeather.bind(this)
   }
 
-  fetchWeather = async () => {
-    if (this.state.location.length < 2) return this.setState({ weather: {} });
-
+  async fetchWeather() {
     try {
       this.setState({ isLoading: true })
       // 1) Getting location (geocoding)
@@ -74,29 +74,19 @@ class App extends React.Component {
     }
   }
 
-  setLocation = (e) => this.setState(({ location: e.target.value }))
-
-  componentDidMount() {
-    // this.fetchWeather();
-    this.setState({ location: localStorage.getItem('location') || "" })
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.location !== prevState.location) {
-      this.fetchWeather();
-    }
-
-    localStorage.setItem('location', this.state.location)
-  }
-
   render() {
     return (
       <div className="app">
         <h1>Classy Weather</h1>
-        <Input 
-          location={this.state.location} 
-          onChangeLocation={this.setLocation} 
-        />
+        <div>
+          <input 
+            type="text" 
+            placeholder="Search from location..." 
+            value={this.state.location}
+            onChange={(e) => this.setState(({ location: e.target.value }))}
+          />
+        </div>
+        <button onClick={this.fetchWeather}>Get weather</button>
 
         {this.state.isLoading && <p className="loader">Loading...</p>}
 
@@ -106,25 +96,7 @@ class App extends React.Component {
   }
 }
 
-class Input extends React.Component {
-  render() {
-    return (
-      <div>
-        <input 
-          type="text" 
-          placeholder="Search from location..." 
-          value={this.props.location}
-          onChange={this.props.onChangeLocation}
-        />
-      </div>
-    )
-  }
-}
-
 class Weather extends React.Component {
-  componentWillUnmount() {
-    
-  }
   render() {
     const { 
       temperature_2m_max: max, 
@@ -161,7 +133,7 @@ class Day extends React.Component {
       <li className="day">
         <span>{getWeatherIcon(codes)}</span>
         <p>{isToday ? "Today" : formatDay(date)}</p>
-        <p>{Math.floor(min)}&deg; &mdash; <strong>{Math.ceil(max)}&deg;</strong></p>
+        <p>{Math.floor(min)}&deg; &mdash; <strong>{Math.ceil(max)}</strong></p>
       </li>
     )
   }
